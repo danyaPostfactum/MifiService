@@ -452,6 +452,7 @@ public class WifiApController {
     public int getWifiChannel() {
         WifiConfiguration conf = getWifiApConfiguration();
         if (conf != null) {
+            return conf.channel;
         }
         return 6;
     }

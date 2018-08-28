@@ -64,6 +64,7 @@ function init(){
 			if(result.ssid){
 				$("#ssid").val(result.ssid);
 			}
+			$("#wifi-channel").val(result.channel);
 			if(result.client_num){
 				$("#client_num").html(result.client_num   + " /  " + result.maxSta);
 			}
@@ -239,7 +240,7 @@ function applyFunction(){
 
     var param = { funcNo: 1007,
 
-        ssid: $("#ssid").val(), maxSta: nmaxsta
+        ssid: $("#ssid").val(), maxSta: nmaxsta, channel: $("#wifi-channel").val()
     };
     request2(param, function(data) {
         var flag = data.flag;

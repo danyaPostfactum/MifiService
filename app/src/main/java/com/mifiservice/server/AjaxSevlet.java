@@ -288,6 +288,7 @@ public class AjaxSevlet extends HttpServlet {
                 JSONObject jsonObject9 = new JSONObject();
                 String ssid = (String) jo.get("ssid");
                 int maxSta = jo.getInt("maxSta");
+                int channel = jo.getInt("channel");
                 String[] strArr = {"b", "g-only", "n-only", "g", "n", "a"};
                 if (ssid.length() < 2) {
                     jsonObject9.put("flag", "0");
@@ -298,9 +299,11 @@ public class AjaxSevlet extends HttpServlet {
                     Log.d("Ajax", "request: 1");
                     this.mWifiApController.setSsid(ssid);
                     this.mWifiApController.setWifiMaxSta(maxSta);
+                    this.mWifiApController.setWifiChannel(channel);
                     Log.d("Ajax", "request: 2");
                     MifiConfiguration.getInstance().WIFIssid = ssid;
                     MifiConfiguration.getInstance().WIFImaxSta = maxSta;
+                    MifiConfiguration.getInstance().WIFIchannel = channel;
                     MifiConfiguration.getInstance().saveToFile();
                 }
                 resp.getWriter().println(jsonObject9.toString());
