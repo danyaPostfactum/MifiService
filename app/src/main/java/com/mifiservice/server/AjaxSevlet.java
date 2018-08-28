@@ -609,6 +609,7 @@ public class AjaxSevlet extends HttpServlet {
                 resultObject11.put("imei", this.mWanDataController.getIMEI());
                 resultObject11.put("manufacture", this.mDeviceController.getMaunufactor());
                 resultObject11.put("fwversion", this.mDeviceController.getSWVersion());
+                resultObject11.put("cputemp", this.mDeviceController.getCpuTemp() + "°");
                 int dbm = this.mWanDataController.getDbm();
                 if (dbm != 10000) {
                     resultObject11.put("dbm", " " + dbm + " dBm");

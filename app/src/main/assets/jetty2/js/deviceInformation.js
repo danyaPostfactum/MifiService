@@ -48,6 +48,7 @@ function init() {
             $("#imei").val(result.imei);
             $("#FWversion").html(result.fwversion);
             $("#manufacturer").html(result.manufacture);
+            $("#cputemp").html(result.cputemp);
             $("#dbmSignal").html(result.dbm);
                  
         } else {//´íÎó

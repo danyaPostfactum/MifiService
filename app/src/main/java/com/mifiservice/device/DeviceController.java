@@ -12,6 +12,7 @@ import com.mifiservice.config.MifiConfiguration;
 import com.mifiservice.service.MifiService;
 import java.lang.reflect.Method;
 import org.eclipse.jetty.http.HttpVersions;
+import java.io.RandomAccessFile;
 
 /* loaded from: classes.dex */
 public class DeviceController {
@@ -124,6 +125,17 @@ public class DeviceController {
 
     public boolean isRestoreFactory() {
         return this.isReFac;
+    }
+
+    public int getCpuTemp() {
+        try {
+            RandomAccessFile reader = new RandomAccessFile("/sys/class/thermal/thermal_zone0/temp", "r");
+            String line = reader.readLine();
+            return Integer.parseInt(line);
+        } catch (Exception e) {
+            //throw new RuntimeException(e);
+        }
+        return 0;
     }
 
     public DeviceController(Context context) {
