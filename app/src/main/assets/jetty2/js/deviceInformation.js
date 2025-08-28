@@ -49,7 +49,16 @@ function init() {
             $("#FWversion").html(result.fwversion);
             $("#manufacturer").html(result.manufacture);
             $("#cputemp").html(result.cputemp);
-            $("#dbmSignal").html(result.dbm);
+            $("#rssi").html(result.rssi);
+            $("#lteRsrp").html(result.lteRsrp);
+            $("#lteRsrq").html(result.lteRsrq);
+            $("#lteRssnr").html(result.lteRssnr);
+            if (result.eNB) {
+                $("#enb-cell").html(result.eNB + "/" + result.cell);
+            } else {
+                 $("#enb-cell").html("");
+            }
+            $("#pci").html(result.pci);
                  
         } else {//´íÎó
              Alert(mifi_translate(error_info)); 

@@ -8,6 +8,9 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.TrafficStats;
 import android.os.AsyncTask;
+import android.telephony.CellIdentityLte;
+import android.telephony.CellInfo;
+import android.telephony.CellInfoLte;
 import android.telephony.PhoneStateListener;
 import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
@@ -26,6 +29,8 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Enumeration;
+import java.util.List;
+
 import org.eclipse.jetty.http.HttpVersions;
 import org.eclipse.jetty.util.StringUtil;
 
@@ -50,9 +55,21 @@ public class WanDataController {
     private int dbm = 10000;
     public int repower_times = 0;
 
+    public SignalStrengthParams signalStrengthParams;
+
     /* loaded from: classes.dex */
     private class MyPhoneStateListener extends PhoneStateListener {
         private MyPhoneStateListener() {
+        }
+        @Override
+        public void onCellInfoChanged(List<CellInfo> cellInfo) {
+            Log.d("onCellInfoChanged", "call");
+            for (CellInfo c : cellInfo)
+                if (c instanceof CellInfoLte){
+                    CellInfoLte cellInfoLte = (CellInfoLte) c;
+                    cellInfoLte.getCellIdentity().getPci();
+                    Log.d("onCellInfoChanged", "CellInfoLte--" + c);
+                }
         }
 
         @Override // android.telephony.PhoneStateListener
@@ -60,11 +77,24 @@ public class WanDataController {
             super.onSignalStrengthsChanged(signalStrength);
             WanDataController.this.last_signallevel = signalStrength.getLevel();
             int curdbm = signalStrength.getDbm();
-            if (curdbm <= -30) {
-                WanDataController.this.dbm = curdbm;
+
+            int rssi;
+            int asu;
+            if (signalStrength.getLteLevel() == SignalStrength.SIGNAL_STRENGTH_NONE_OR_UNKNOWN) {
+                asu = signalStrength.getGsmSignalStrength();
             } else {
-                Log.d(WanDataController.TAG, "curdbm:  " + curdbm);
+                asu = signalStrength.getLteSignalStrength();
             }
+            if (asu != 99) {
+                rssi = -113 + (2 * asu);
+            } else {
+                rssi = -1;
+            }
+            WanDataController.this.signalStrengthParams.rssi = rssi;
+            WanDataController.this.signalStrengthParams.lteRsrp = signalStrength.getLteRsrp();
+            WanDataController.this.signalStrengthParams.lteRsrq = signalStrength.getLteRsrq();
+            WanDataController.this.signalStrengthParams.lteRssnr = signalStrength.getLteRssnr();
+
         }
 
         @Override // android.telephony.PhoneStateListener
@@ -83,10 +113,14 @@ public class WanDataController {
         this.telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         this.connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         this.mContext = context;
+        this.signalStrengthParams = new SignalStrengthParams();
         this.imeiString = this.telephonyManager.getDeviceId();
         Log.d(TAG, "imeiString:  " + this.imeiString);
         MyPhoneStateListener myListener = new MyPhoneStateListener();
-        this.telephonyManager.listen(myListener, 321);
+        this.telephonyManager.listen(myListener, PhoneStateListener.LISTEN_SERVICE_STATE
+                | PhoneStateListener.LISTEN_DATA_CONNECTION_STATE
+                | PhoneStateListener.LISTEN_SIGNAL_STRENGTHS
+                | PhoneStateListener.LISTEN_CELL_INFO);
         registerData();
     }
 
@@ -114,6 +148,24 @@ public class WanDataController {
         networkInfo.isAvailable();
         int networkType = networkInfo.getType();
         return 1 != networkType && networkType == 0;
+    }
+
+    public CellIdentityLte getCellIdentity() {
+        List<CellInfo> cellInfoList = this.telephonyManager.getAllCellInfo();
+
+        if (cellInfoList != null) {
+            for (CellInfo cellInfo : cellInfoList) {
+                if (cellInfo instanceof CellInfoLte) {
+                    CellInfoLte cellInfoLte = (CellInfoLte) cellInfo;
+                    CellIdentityLte cellIdentityLte = cellInfoLte.getCellIdentity();
+
+                    if (cellIdentityLte.getCi() != Integer.MAX_VALUE)
+                        return cellIdentityLte;
+
+                }
+            }
+        }
+        return null;
     }
 
     public String getMobileIP() {
@@ -414,6 +466,20 @@ public class WanDataController {
         public Boolean doInBackground(Integer... integers) {
             String resetSlaveCommand = this.switchBand;
             return Boolean.valueOf(WanDataController.this.doShellCommand(resetSlaveCommand));
+        }
+    }
+
+    public class SignalStrengthParams {
+        public static final int INVALID = 0x7FFFFFFF;
+        public int rssi;
+        public int lteRsrp;
+        public int lteRsrq;
+        public int lteRssnr;
+        public SignalStrengthParams() {
+            rssi = INVALID;
+            lteRsrp = INVALID;
+            lteRsrq = INVALID;
+            lteRssnr = INVALID;
         }
     }
 

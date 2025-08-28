@@ -3,6 +3,7 @@ package com.mifiservice.server;
 import android.content.Context;
 import android.net.wifi.WifiConfiguration;
 import android.provider.Settings;
+import android.telephony.CellIdentityLte;
 import android.util.Log;
 import com.mifiservice.config.MifiConfiguration;
 import com.mifiservice.device.DeviceController;
@@ -610,12 +611,23 @@ public class AjaxSevlet extends HttpServlet {
                 resultObject11.put("manufacture", this.mDeviceController.getMaunufactor());
                 resultObject11.put("fwversion", this.mDeviceController.getSWVersion());
                 resultObject11.put("cputemp", this.mDeviceController.getCpuTemp() + "°");
-                int dbm = this.mWanDataController.getDbm();
-                if (dbm != 10000) {
-                    resultObject11.put("dbm", " " + dbm + " dBm");
+                CellIdentityLte ci =  this.mWanDataController.getCellIdentity();
+                if (ci != null) {
+                    int eNb = ci.getCi() >> 8;
+                    int cell = ci.getCi() & 0xff;
+                    resultObject11.put("eNB", eNb);
+                    resultObject11.put("cell", cell);
+                    resultObject11.put("pci", ci.getPci());
                 } else {
-                    resultObject11.put("dbm", HttpVersions.HTTP_0_9);
+                    resultObject11.put("eNB", "");
+                    resultObject11.put("cell", "");
+                    resultObject11.put("pci", "");
                 }
+                resultObject11.put("rssi", this.mWanDataController.signalStrengthParams.rssi + " dBm");
+                resultObject11.put("lteRsrp", this.mWanDataController.signalStrengthParams.lteRsrp + " dBm");
+                resultObject11.put("lteRsrq", this.mWanDataController.signalStrengthParams.lteRsrq + " dB");
+                float lteRssnr = this.mWanDataController.signalStrengthParams.lteRssnr / 10;
+                resultObject11.put("lteRssnr", lteRssnr  + " dB");
                 JSONArray jsonArray11 = new JSONArray();
                 jsonArray11.put(resultObject11);
                 jsonObject27.put("results", jsonArray11);
